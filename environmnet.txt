@@ -1,0 +1,15 @@
+# create the environment
+conda create -n TAKD python=3.7 anaconda
+
+# activate environment
+conda activate TAKD
+
+##
+1. Install pytorch
+conda install pytorch torchvision -c pytorch
+2. Install nni
+pip3 install nni
+
+## error
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+flake8 4.0.1 requires mccabe<0.7.0,>=0.6.0, but you have mccabe 0.7.0 which is incompatible.
