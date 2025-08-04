@@ -1,0 +1,17 @@
+# with nni
+# launch a command line
+nnictl create --config config.yml
+or
+nnictl create --config config.yml --port 8080
+#if there is an error we use --debug
+nnictl create --config config.yml --port 8085 --debug
+# we find the path of the error log at the summary of the experiment: trials/stderr
+# how to kill port
+kill -9 ` lsof -t -i:8080`
+
+
+####  command lines to use
+# train teacher
+python3 train.py --epochs 4 --student resnet110 --cuda 1 --dataset cifar100
+# train student
+python3 train.py --epochs 160 --teacher resnet110 --student resnet8 --cuda 1 --dataset cifar100

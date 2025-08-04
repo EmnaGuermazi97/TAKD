@@ -15,8 +15,8 @@ def str2bool(v):
 		return True
 	else:
 		return False
-	
-	
+
+
 def parse_arguments():
 	parser = argparse.ArgumentParser(description='TA Knowledge Distillation Code')
 	parser.add_argument('--epochs', default=200, type=int,  help='number of total epochs to run')
@@ -29,7 +29,7 @@ def parse_arguments():
 	parser.add_argument('--student', '--model', default='resnet8', type=str, help='teacher student name')
 	parser.add_argument('--teacher-checkpoint', default='', type=str, help='optinal pretrained checkpoint for teacher')
 	parser.add_argument('--cuda', default=False, type=str2bool, help='whether or not use cuda(train on GPU)')
-	parser.add_argument('--dataset-dir', default='./data', type=str,  help='dataset directory')
+	parser.add_argument('--dataset-dir', default='/home/emna/Dataset/CIFAR100', type=str,  help='dataset directory')
 	args = parser.parse_args()
 	return args
 
@@ -60,17 +60,17 @@ class TrainManager(object):
 		if self.have_teacher:
 			self.teacher.eval()
 			self.teacher.train(mode=False)
-			
+
 		self.train_loader = train_loader
 		self.test_loader = test_loader
 		self.config = train_config
-	
+
 	def train(self):
 		lambda_ = self.config['lambda_student']
 		T = self.config['T_student']
 		epochs = self.config['epochs']
 		trial_id = self.config['trial_id']
-		
+
 		max_val_acc = 0
 		iteration = 0
 		best_acc = 0
@@ -86,27 +86,27 @@ class TrainManager(object):
 				self.optimizer.zero_grad()
 				output = self.student(data)
 				# Standard Learning Loss ( Classification Loss)
-				loss_SL = criterion(output, target) 
+				loss_SL = criterion(output, target)
 				loss = loss_SL
-				
+
 				if self.have_teacher:
 					teacher_outputs = self.teacher(data)
 					# Knowledge Distillation Loss
 					loss_KD = nn.KLDivLoss()(F.log_softmax(output / T, dim=1),
 													  F.softmax(teacher_outputs / T, dim=1))
 					loss = (1 - lambda_) * loss_SL + lambda_ * T * T * loss_KD
-					
+
 				loss.backward()
 				self.optimizer.step()
-			
+
 			print("epoch {}/{}".format(epoch, epochs))
 			val_acc = self.validate(step=epoch)
 			if val_acc > best_acc:
 				best_acc = val_acc
 				self.save(epoch, name='{}_{}_best.pth.tar'.format(self.name, trial_id))
-		
+
 		return best_acc
-	
+
 	def validate(self, step=0):
 		self.student.eval()
 		with torch.no_grad():
@@ -122,10 +122,10 @@ class TrainManager(object):
 				correct += (predicted == labels).sum().item()
 			# self.accuracy_history.append(acc)
 			acc = 100 * correct / total
-			
+
 			print('{{"metric": "{}_val_accuracy", "value": {}}}'.format(self.name, acc))
 			return acc
-	
+
 	def save(self, epoch, name=None):
 		trial_id = self.config['trial_id']
 		if name is None:
@@ -140,11 +140,11 @@ class TrainManager(object):
 				'optimizer_state_dict': self.optimizer.state_dict(),
 				'epoch': epoch,
 			}, name)
-	
+
 	def adjust_learning_rate(self, optimizer, epoch):
 		epochs = self.config['epochs']
 		models_are_plane = self.config['is_plane']
-		
+
 		# depending on dataset
 		if models_are_plane:
 			lr = 0.01
@@ -155,7 +155,7 @@ class TrainManager(object):
 				lr = 0.1 * 0.1
 			else:
 				lr = 0.1 * 0.01
-		
+
 		# update optimizer's learning rate
 		for param_group in optimizer.param_groups:
 			param_group['lr'] = lr
@@ -184,8 +184,8 @@ if __name__ == "__main__":
 		'T_student': config.get('T_student'),
 		'lambda_student': config.get('lambda_student'),
 	}
-	
-	
+
+
 	# Train Teacher if provided a teacher, otherwise it's a normal training using only cross entropy loss
 	# This is for training single models(NOKD in paper) for baselines models (or training the first teacher)
 	if args.teacher:
@@ -202,7 +202,7 @@ if __name__ == "__main__":
 			teacher_trainer = TrainManager(teacher_model, teacher=None, train_loader=train_loader, test_loader=test_loader, train_config=teacher_train_config)
 			teacher_trainer.train()
 			teacher_model = load_checkpoint(teacher_model, os.path.join('./', teacher_name))
-			
+
 	# Student training
 	print("---------- Training Student -------")
 	student_train_config = copy.deepcopy(train_config)

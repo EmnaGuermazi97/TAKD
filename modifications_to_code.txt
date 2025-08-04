@@ -1,0 +1,2 @@
+1. change data path to where cifar dataset is: file data_loader.py from ./data to /home/emna/Dataset/CIFAR100
+2. changed data path in train.py file
