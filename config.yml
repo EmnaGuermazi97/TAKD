@@ -21,3 +21,5 @@ trial:
   # python3 train.py --epochs 160 --teacher resnet110 --student resnet8 --cuda 1
   codeDir: .
   gpuNum: 1
+localConfig:
+  useActiveGpu: true
